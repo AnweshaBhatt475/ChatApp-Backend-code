@@ -16,10 +16,10 @@ const allowedOrigins = [
   'http://localhost:5174',
 ];
 
-const cors = require('cors');
+
 const allowedOrigins = [
-  'https://chat-app-c2rh.vercel.app', // ✅ your Vercel frontend
-  'http://localhost:5173'             // ✅ optional, for local dev
+  'https://chat-app-c2rh.vercel.app', 
+  'http://localhost:5173'             
 ];
 
 app.use(cors({
