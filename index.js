@@ -16,16 +16,24 @@ const allowedOrigins = [
   'http://localhost:5174',
 ];
 
+const cors = require('cors');
+
+const allowedOrigins = [
+  'https://chat-app-c2rh.vercel.app', 
+];
+
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow server-side calls and same-origin tools like Postman
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true,
+  credentials: true, 
 }));
+
 
 app.use(express.json());
 app.use(cookieParser());
