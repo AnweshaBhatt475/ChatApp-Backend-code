@@ -17,22 +17,22 @@ const allowedOrigins = [
 ];
 
 const cors = require('cors');
-
 const allowedOrigins = [
-  'https://chat-app-c2rh.vercel.app', 
+  'https://chat-app-c2rh.vercel.app', // ✅ your Vercel frontend
+  'http://localhost:5173'             // ✅ optional, for local dev
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow server-side calls and same-origin tools like Postman
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true, 
+  credentials: true,
 }));
+
 
 
 app.use(express.json());
