@@ -8,7 +8,7 @@ const updateUserDetails = require('../controller/updateUserDetails');
 const searchUser = require('../controller/searchUser');
 
 const wallpaperRoutes = require('./wallpaper');
-const groupRoutes = require('./GroupRoutes'); // ✅ NEW: Import group routes
+const groupRoutes = require('./groupRoutes'); // ✅ matches your actual file
 
 const router = express.Router();
 
