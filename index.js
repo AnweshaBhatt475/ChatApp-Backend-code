@@ -1,49 +1,33 @@
+// index.js
 const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
-const connectDB = require('./config/connectDB');
-const router = require('./routes/index');
-const cookieParser = require('cookie-parser');
 const http = require('http');
-const { setupSocket } = require('./socket/index');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
+const connectDB = require('./config/connectDB');
+const routes = require('./routes/index');
+const setupSocket = require('./socket'); // ✅ correct import
+
+dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4001; // ✅ Move this line up here
+const server = http.createServer(app);
 
-// ✅ CORS setup
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://chat-app-c2rh.vercel.app',
-];
+connectDB();
 
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
 }));
-
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Health check route (now PORT is defined above)
-app.get('/', (req, res) => {
-  res.json({ message: `Server running at ${PORT}` });
-});
+app.use('/api', routes);
 
-app.use('/api', router);
-
-const server = http.createServer(app);
+// ✅ Attach socket.io to server
 setupSocket(server);
 
-// ✅ Start server AFTER DB connection
-connectDB().then(() => {
-  server.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}`);
-  });
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+  console.log(`🚀 Server listening on http://localhost:${PORT}`);
 });
