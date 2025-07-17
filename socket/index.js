@@ -8,8 +8,8 @@ const { ConversationModel, MessageModel } = require('../models/ConversationModel
 const getConversation = require('../helpers/getConversation');
 
 // ✅ Required missing models
-const Message = require('../models/MessageModel'); // Replace with your actual message model
-const Group = require('../models/GroupModel');     // Replace with your actual group model
+const Message = require('../models/MessageModel'); 
+const Group = require('../models/GroupModel');     
 
 const app = express();
 const server = http.createServer(app);
