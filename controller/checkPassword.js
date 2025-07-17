@@ -6,7 +6,6 @@ async function checkPassword(request, response) {
   try {
     const { password, userId } = request.body;
 
-    // 1️⃣  Find user by id
     const user = await UserModel.findById(userId);
     if (!user) {
       return response.status(400).json({
@@ -15,7 +14,6 @@ async function checkPassword(request, response) {
       });
     }
 
-    // 2️⃣  Verify password
     const verifyPassword = await bcryptjs.compare(password, user.password);
     if (!verifyPassword) {
       return response.status(400).json({
@@ -24,7 +22,6 @@ async function checkPassword(request, response) {
       });
     }
 
-    // 3️⃣  Sign JWT
     const tokenData = { id: user._id, email: user.email };
     const secret = process.env.JWT_SECRET_KEY;
     if (!secret) {
@@ -32,15 +29,14 @@ async function checkPassword(request, response) {
     }
     const token = jwt.sign(tokenData, secret, { expiresIn: '1d' });
 
-    // 4️⃣  Cookie options
+    // ✅ Fixed for cross-origin cookies
     const cookieOptions = {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,       // Ensure it's true for HTTPS
+      sameSite: 'none',   // Required for cross-site cookies
       maxAge: 24 * 60 * 60 * 1000,
     };
 
-    // ✅ 5️⃣ Send full user data in response
     return response
       .cookie('token', token, cookieOptions)
       .status(200)
@@ -52,7 +48,7 @@ async function checkPassword(request, response) {
           _id: user._id,
           name: user.name,
           email: user.email,
-          profile_pic: user.profile_pic, // ✅ include this
+          profile_pic: user.profile_pic,
         },
       });
 
