@@ -31,6 +31,9 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// ✅ Move PORT up here so it exists before it's used
+const PORT = process.env.PORT || 4001;
+
 // ✅ Health check route
 app.get('/', (req, res) => {
   res.json({ message: `Server running at ${PORT}` });
@@ -46,8 +49,6 @@ const server = http.createServer(app);
 setupSocket(server);
 
 // ✅ Start server after DB connection
-const PORT = process.env.PORT || 4001;
-
 connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
