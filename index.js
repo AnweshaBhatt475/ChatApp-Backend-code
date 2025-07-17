@@ -4,24 +4,19 @@ require('dotenv').config();
 const connectDB = require('./config/connectDB');
 const router = require('./routes/index');
 const cookieParser = require('cookie-parser');
+const http = require('http'); // ✅ Add HTTP server module
+const { setupSocket } = require('./socket/index'); // ✅ Updated export from socket/index.js
 
 const app = express();
 
-
-
-
-// ✅ Flexible CORS setup
+// ✅ Merged CORS origins (removed duplicate)
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://chat-app-c2rh.vercel.app'
 ];
 
-
-const allowedOrigins = [
-  'https://chat-app-c2rh.vercel.app', 
-  'http://localhost:5173'             
-];
-
+// ✅ Use CORS with dynamic origin check
 app.use(cors({
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
@@ -33,14 +28,8 @@ app.use(cors({
   credentials: true,
 }));
 
-
-
 app.use(express.json());
 app.use(cookieParser());
-
-// ✅ WebSocket setup
-const { app: socketApp, server } = require('./socket/index');
-socketApp.use(app);
 
 // ✅ Port
 const PORT = process.env.PORT || 4001;
@@ -53,11 +42,9 @@ app.get('/', (req, res) => {
 // ✅ API routes
 app.use('/api', router);
 
-
-
-
-
-
+// ✅ Create HTTP server and attach Socket.IO
+const server = http.createServer(app);
+setupSocket(server); // ✅ Pass server to socket/index.js
 
 // ✅ DB connection + start server
 connectDB().then(() => {
