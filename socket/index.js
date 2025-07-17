@@ -6,6 +6,8 @@ const getUserDetailsFromToken = require('../helpers/getUserDetailsFromToken');
 const UserModel = require('../models/UserModel');
 const { ConversationModel, MessageModel } = require('../models/ConversationModel');
 const getConversation = require('../helpers/getConversation');
+const Message = require('../models/MessageModel'); // ✅ Add this
+const Group = require('../models/GroupModel'); // ✅ Add this
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +33,7 @@ io.on('connection', async (socket) => {
   }
 
   const userId = user._id.toString();
+  socket.userId = userId; // ✅ Set socket.userId to avoid undefined errors
 
   socket.join(userId);
   onlineUser.add(userId);
@@ -127,20 +130,21 @@ io.on('connection', async (socket) => {
         { _id: { $in: ids }, msgByUserId },
         { $set: { seen: true } }
       );
-socket.on("delete-message", async ({ messageId, userId }) => {
-  const msg = await Message.findByIdAndDelete(messageId);
 
-  // Re-fetch messages and emit
-  const messages = await Message.find({
-    $or: [
-      { sender: socket.userId, receiver: userId },
-      { sender: userId, receiver: socket.userId }
-    ]
-  });
+      socket.on("delete-message", async ({ messageId, userId }) => {
+        const msg = await Message.findByIdAndDelete(messageId);
 
-  io.to(socket.userId).emit("message", messages);
-  io.to(userId).emit("message", messages);
-});
+        // Re-fetch messages and emit
+        const messages = await Message.find({
+          $or: [
+            { sender: socket.userId, receiver: userId },
+            { sender: userId, receiver: socket.userId }
+          ]
+        });
+
+        io.to(socket.userId).emit("message", messages);
+        io.to(userId).emit("message", messages);
+      });
 
       io.to(userId).emit('conversation', await getConversation(userId));
       io.to(msgByUserId).emit('conversation', await getConversation(msgByUserId));
@@ -154,14 +158,14 @@ socket.on("delete-message", async ({ messageId, userId }) => {
     io.emit('onlineUser', Array.from(onlineUser));
     console.log('❌  Disconnected:', socket.id);
   });
+});
 
-
-
-
-  io.on('connection', (socket) => {
+// ✅ FIX: Move this OUTSIDE of the first io.on('connection')
+io.on('connection', (socket) => {
   socket.on('join-group', (groupId) => {
     socket.join(groupId);
   });
+
   socket.on('group-message', async (msg) => {
     const message = new Message(msg);
     await message.save();
@@ -172,8 +176,6 @@ socket.on("delete-message", async ({ messageId, userId }) => {
       createdAt: message.createdAt,
     });
   });
-});
-
 });
 
 module.exports = {
