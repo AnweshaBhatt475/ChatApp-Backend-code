@@ -9,11 +9,10 @@ const onlineUser = new Set();
 function setupSocket(server) {
   const io = new Server(server, {
     cors: {
-      origin: ['http://localhost:5173', 'http://localhost:5174'],
+      origin: ['http://localhost:5173', 'http://localhost:5174', 'https://chat-app-pi-nine-97.vercel.app'],
       credentials: true,
     },
   });
-
   io.on('connection', async (socket) => {
     console.log('🔌 User connected:', socket.id);
 
