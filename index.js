@@ -4,12 +4,13 @@ require('dotenv').config();
 const connectDB = require('./config/connectDB');
 const router = require('./routes/index');
 const cookieParser = require('cookie-parser');
-const http = require('http'); // Required to create HTTP server
-const { setupSocket } = require('./socket/index'); // Exported setupSocket from socket/index.js
+const http = require('http');
+const { setupSocket } = require('./socket/index');
 
 const app = express();
+const PORT = process.env.PORT || 4001; // ✅ Move this line up here
 
-// ✅ CORS setup with allowed origins
+// ✅ CORS setup
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -27,28 +28,20 @@ app.use(cors({
   credentials: true,
 }));
 
-// ✅ Middleware
 app.use(express.json());
 app.use(cookieParser());
 
-// ✅ Move PORT up here so it exists before it's used
-const PORT = process.env.PORT || 4001;
-
-// ✅ Health check route
+// ✅ Health check route (now PORT is defined above)
 app.get('/', (req, res) => {
   res.json({ message: `Server running at ${PORT}` });
 });
 
-// ✅ API routes
 app.use('/api', router);
 
-// ✅ Create HTTP server
 const server = http.createServer(app);
-
-// ✅ Attach Socket.IO logic
 setupSocket(server);
 
-// ✅ Start server after DB connection
+// ✅ Start server AFTER DB connection
 connectDB().then(() => {
   server.listen(PORT, () => {
     console.log(`🚀 Server running at http://localhost:${PORT}`);
