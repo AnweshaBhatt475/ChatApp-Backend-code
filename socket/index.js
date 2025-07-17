@@ -6,6 +6,8 @@ const getUserDetailsFromToken = require('../helpers/getUserDetailsFromToken');
 const UserModel = require('../models/UserModel');
 const { ConversationModel, MessageModel } = require('../models/ConversationModel');
 const getConversation = require('../helpers/getConversation');
+const Group = require('../models/Group'); // ✅ Import your Group model
+const Message = require('../models/Message'); // ✅ Import your Message model (group msg)
 
 const app = express();
 const server = http.createServer(app);
@@ -13,7 +15,7 @@ const server = http.createServer(app);
 // ✅ Updated CORS config
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:5173', 'http://localhost:5174'],
+    origin: ['http://localhost:5173', 'http://localhost:5174', 'https://chat-app-c2rh.vercel.app'],
     credentials: true,
   },
 });
@@ -37,6 +39,7 @@ io.on('connection', async (socket) => {
   io.emit('onlineUser', Array.from(onlineUser));
   console.log('✅  Joined room:', userId);
 
+  // ✅ One-on-One Messaging
   socket.on('message-page', async (receiverId) => {
     try {
       const receiver = await UserModel.findById(receiverId).select('-password');
@@ -135,34 +138,34 @@ io.on('connection', async (socket) => {
     }
   });
 
+  // ✅ Group Chat Handling
+  socket.on('join-group', (groupId) => {
+    socket.join(groupId);
+    console.log(`✅ Joined group: ${groupId}`);
+  });
+
+  socket.on('group-message', async (msg) => {
+    try {
+      const message = new Message(msg);
+      await message.save();
+      await Group.findByIdAndUpdate(msg.groupId, { $push: { messages: message._id } });
+      io.to(msg.groupId).emit('new-group-message', {
+        ...msg,
+        _id: message._id,
+        createdAt: message.createdAt,
+      });
+    } catch (err) {
+      console.error('❗ group-message error:', err.message);
+    }
+  });
+
   socket.on('disconnect', () => {
     onlineUser.delete(userId);
     io.emit('onlineUser', Array.from(onlineUser));
     console.log('❌  Disconnected:', socket.id);
   });
-
-
-
-
-  io.on('connection', (socket) => {
-  socket.on('join-group', (groupId) => {
-    socket.join(groupId);
-  });
-  socket.on('group-message', async (msg) => {
-    const message = new Message(msg);
-    await message.save();
-    await Group.findByIdAndUpdate(msg.groupId, { $push: { messages: message._id } });
-    io.to(msg.groupId).emit('new-group-message', {
-      ...msg,
-      _id: message._id,
-      createdAt: message.createdAt,
-    });
-  });
-});
-
 });
 
 module.exports = {
-  app,
   server,
 };
